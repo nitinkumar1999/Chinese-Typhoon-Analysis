@@ -1,0 +1,68 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('ignore')
+typhoon_data = pd.read_csv("typhoon.csv")
+typhoon_data.head()
+typhoon_data.tail()
+typhoon_data.shape
+typhoon_data.columns
+typhoon_data.info()
+typhoon_data.describe()
+typhoon_data.isnull().sum()
+typhoon_data.dropna(inplace = True)
+typhoon_data.isnull().sum()
+typhoon_data['Time']=pd.to_datetime(typhoon_data['code'])
+typhoon_data['NO']=typhoon_data['code']
+typhoon_data.head()
+typhoon_data.tail()
+typhoon_data_198003 = typhoon_data[typhoon_data['NO'] == 198003.0]
+typhoon_data['NO'].unique()
+typhoon_data['NO'].value_counts()
+typhoon_data_198003.head()
+typhoon_data_198003.tail()
+def concat_func(x):
+return pd.Series({
+'Start':x['Time'].min(),
+'End':x['Time'].max(),
+'StLAT':x.loc[x['Time'].idxmin()]['LAT'],
+'EdLAT':x.loc[x['Time'].idxmax()]['LAT'],
+'StLONG':x.loc[x['Time'].idxmin()]['LONG'],
+'EdLONG':x.loc[x['Time'].idxmax()]['LONG'],
+'WND':x['WND'].max(),
+'SiR34':x['SiR34'].max(),
+'SATSer':','.join(x['SATSer'].unique()),
+})
+weather_data=typhoon_data.groupby(typhoon_data['NO']).apply(concat_func).reset_index()
+weather_data.head()
+weather_data.tail()
+weather_data.shape
+weather_data.columns
+weather_data.info()
+weather_data.describe()
+plt.figure(figsize=(15,5))
+sns.kdeplot(data = weather_data['SiR34'], shade=True);
+plt.title('Typhoon Size')
+plt.xticks(rotation = 0)
+plt.show()
+plt.figure(figsize=(15,5))
+sns.kdeplot(data = weather_data['WND'], shade=True);
+plt.title('Typhoon Strength')
+plt.xticks(rotation = 0)
+plt.show()
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import folium
+fig_city = px.scatter_geo(weather_data, lat='StLAT', lon='StLONG',
+scope="asia",
+hover_name=weather_data['NO'],
+size=weather_data['SiR34'],
+color='WND',
+title ='Typhoon Start')
+fig_city.show()
+weather_data_new = weather_data[['WND', 'SiR34']]
+weather_data_new.corr()
+sns.heatmap(weather_data_new.corr())
